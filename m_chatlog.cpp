@@ -20,73 +20,63 @@
 class ModuleChatLog : public Module
 {
  private:
-    std::vector<std::string> logexception;
+     std::vector<std::string> logexception;
  public:
-    ModuleChatLog()
-    {
 
-        Implementation eventlist[] = { I_OnUserPreMessage, I_OnUserPreNotice, I_OnUserJoin, I_OnUserPart, I_OnUserQuit, I_OnUserKick };
-        ServerInstance->Modules->Attach(eventlist, this, 6);
-    }
-
-    virtual ~ModuleChatLog()
+    //ModResult OnUserPreMessage(User* user,void* dest,int target_type, std::string &text, char status, CUList &exempt_list)
+    ModResult OnUserPreMessage(User* user, const MessageTarget& msgtarget, MessageDetails& details) CXX11_OVERRIDE
     {
-    }
+         if (msgtarget.type == MessageTarget::TYPE_USER)
+         {
+              User* u = msgtarget.Get<User>();
 
-    virtual ModResult OnUserPreMessage(User* user,void* dest,int target_type, std::string &text, char status, CUList &exempt_list)
-    {
-        if (target_type == TYPE_USER)
-        {
-            User* u = (User*)dest;
             // Exclude messages for excluded nicks
               for (std::vector<std::string>::iterator x = logexception.begin(); x != logexception.end(); x++) {
                    if (InspIRCd::Match(u->nick, *x, ascii_case_insensitive_map))
                         return MOD_RES_PASSTHRU;
               }
 
-              ServerInstance->Logs->Log("m_chatlog",DEFAULT,"%s: <%s!%s@%s> %s",u->nick.c_str(), user->nick.c_str(), user->ident.c_str(), user->host.c_str(), text.c_str());
-         }
-         else if (target_type == TYPE_CHANNEL)
+              ServerInstance->Logs->Log("m_chatlog",LOG_DEFAULT,"%s: <%s!%s@%s> %s", u->nick.c_str(), user->nick.c_str(), user->ident.c_str(), user->GetRealHost().c_str(), details.text.c_str());
+         }         
+         else if (msgtarget.type == MessageTarget::TYPE_CHANNEL)
          {
-              Channel* c = (Channel*)dest;
-
-              ServerInstance->Logs->Log("m_chatlog",DEFAULT,"%s: <%s!%s@%s> %s",c->name.c_str(), user->nick.c_str(), user->ident.c_str(), user->host.c_str(), text.c_str());
+              Channel* c = msgtarget.Get<Channel>();
+ 
+              ServerInstance->Logs->Log("m_chatlog",LOG_DEFAULT,"%s: <%s!%s@%s> %s",c->name.c_str(), user->nick.c_str(), user->ident.c_str(), user->GetRealHost().c_str(), details.text.c_str());
          }
          return MOD_RES_PASSTHRU;
     }
 
-
-    ModResult OnUserPreNotice(User* user,void* dest,int target_type, std::string &text, char status, CUList &exempt_list)
+    ModResult OnUserPreNotice(User* user, const MessageTarget& msgtarget, MessageDetails& details) CXX11_OVERRIDE
     {
-         return OnUserPreMessage(user,dest,target_type,text,status,exempt_list);
+         return OnUserPreMessage(user, msgtarget, details);
     }
 
 
-    void OnUserJoin(Membership* memb, bool sync, bool created, CUList& excepts)
+    void OnUserJoin(Membership* memb, bool sync, bool created, CUList& excepts) CXX11_OVERRIDE
     {
-/*         ServerInstance->Logs->Log("m_chatlog",DEFAULT,"*** %s has joined %s",user->nick.c_str(),chan->name.c_str()); */
-         ServerInstance->Logs->Log("m_chatlog",DEFAULT,"*** %s has joined %s",memb->user->nick.c_str(),memb->chan->name.c_str());
+         ServerInstance->Logs->Log("m_chatlog",LOG_DEFAULT,"*** %s has joined %s",memb->user->nick.c_str(),memb->chan->name.c_str());
     }
 
-    void OnUserPart(Membership* memb, std::string &partmessage, CUList& except_list)
+    void OnUserPart(Membership* memb, std::string &partmessage, CUList& except_list) CXX11_OVERRIDE
     {
-         ServerInstance->Logs->Log("m_chatlog",DEFAULT,"*** %s has left %s: %s",memb->user->nick.c_str(),memb->chan->name.c_str(),partmessage.c_str());
+         ServerInstance->Logs->Log("m_chatlog",LOG_DEFAULT,"*** %s has left %s: %s",memb->user->nick.c_str(),memb->chan->name.c_str(),partmessage.c_str());
     }
 
 
-    void OnUserQuit(User* user, const std::string& message, const std::string& oper_message)
+    void OnUserQuit(User* user, const std::string& message, const std::string& oper_message) CXX11_OVERRIDE
     {
-         ServerInstance->Logs->Log("m_chatlog",DEFAULT,"*** %s has quit IRC: %s",user->nick.c_str(),message.c_str());
+         ServerInstance->Logs->Log("m_chatlog",LOG_DEFAULT,"*** %s has quit IRC: %s",user->nick.c_str(),message.c_str());
     }
 
-    void OnUserKick(User* source, Membership* memb, const std::string &reason, CUList& excepts)
+    void OnUserKick(User* source, Membership* memb, const std::string &reason, CUList& excepts) CXX11_OVERRIDE
     {
-         ServerInstance->Logs->Log("m_chatlog",DEFAULT,"*** %s has been kicked by %s from %s: %s",memb->user->nick.c_str(),memb->chan->name.c_str(),source->nick.c_str(),reason.c_str());
+         ServerInstance->Logs->Log("m_chatlog",LOG_DEFAULT,"*** %s has been kicked by %s from %s: %s",memb->user->nick.c_str(),memb->chan->name.c_str(),source->nick.c_str(),reason.c_str());
     }
 
-    virtual Version GetVersion()
+    virtual Version GetVersion() CXX11_OVERRIDE
     {
-        return Version("A module which logs all chat to the ircd log at default loglevel.",VF_VENDOR);
+        return Version("A module which logs all chat to the ircd log at default loglevel.");
     }
 
 };
