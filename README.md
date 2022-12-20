@@ -13,8 +13,17 @@ on github by Josh Enders <josh.enders@gmail.com> and then by David Smith <david.
 
 See: http://www.inspircd.org/forum/showthread.php?t=5592 (Dead link)
 
-Building
-=========
+Building in Docker
+==================
+
+If you would prefer to not install the required build-tools, you can build
+this module in a docker image, extract it from a container and then delete
+the image.  A Dockerfile and simple bash script is provided.  Simply run
+
+    ./build_in_docker.sh
+
+Building Natively
+=================
 
 This module has been successfully built against InspIRCd v3.14.0. 
 
